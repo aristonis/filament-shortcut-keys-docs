@@ -1,6 +1,6 @@
 # Filament Shortcut Keys
 
-![Filament Shortcut Keys](../assets/cover.jpg)
+![Filament Shortcut Keys](https://raw.githubusercontent.com/aristonis/filament-shortcut-keys/main/art/cover.jpg)
 
 ## Introduction
 
