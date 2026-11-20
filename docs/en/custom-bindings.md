@@ -1,68 +1,65 @@
 # Custom bindings
 
-A custom binding is a key an admin adds for themselves, on top of the automatic ones. It needs
-`personal` mode. Admins add them from the "Manage shortcuts" page with **Add custom binding**: a name,
-a letter, what it opens, and the destination.
+## Introduction
 
-Custom bindings use the same `G` leader as navigation and share its letter pool, so the two never
-collide.
+A custom binding is a key an admin adds for themselves, on top of the automatic shortcuts. It either opens a page in your application or clicks an element on the current page. Custom bindings need [`personal` mode](customization.md#personal-mode).
 
-The name identifies the binding: adding another binding with the same name replaces it. The manage
-page has no action to remove or disable a custom binding; that is done from code with `enable()`
-(see [driving it from code](#driving-it-from-code)).
+Admins add a binding from the **Manage shortcuts** page with **Add custom binding**. The form asks for:
 
-## Route and selector
+- a **Name**, up to 64 characters, which identifies the binding,
+- a **Letter**,
+- what the binding **Opens**: a page in this app, or an element on the page,
+- the **Destination**: a path or a CSS selector.
 
-A binding points at exactly one of two things:
+Custom bindings use the same `G` leader as navigation and share its pool of letters, so a custom binding and a navigation shortcut never get the same key. Adding a binding with a name that already exists replaces that binding.
 
-```php
-['route' => '/admin/orders']         // navigates to a page in this app
-['selector' => '#refresh-button']    // clicks an element already on the page
+## Binding a key to a page
+
+A binding that opens a page takes a path in your application:
+
+```text
+/admin/orders
 ```
 
-The rules, checked when the binding is saved:
+The path must start with a single `/`. A full URL, a protocol-relative URL such as `//example.com`, or a scheme such as `javascript:` is rejected when the binding is saved, so a binding can never send an admin to another site.
 
-- The payload has exactly one key, `route` or `selector`, never both and nothing else.
-- The value is a non-empty string.
-- A route is host-relative: it starts with a single `/`. A scheme (`https:`, `javascript:`) or a
-  protocol-relative `//` is rejected, which blocks off-site redirects.
+## Binding a key to an element
 
-A selector is only checked for shape. A selector that is not valid CSS, or matches nothing on the
-current page, does nothing when pressed; the rest of the keymap keeps working.
+A binding that clicks an element takes a CSS selector:
 
-The binding's badge sits on the clicked element, or on the link whose `href` matches the route exactly.
-A route with no matching link on the page still works; it just gets no badge.
+```text
+#refresh-button
+```
 
-## The security boundary
+Pressing the key clicks the first element on the current page that matches the selector. The selector is only checked for being a non-empty string when it is saved. A selector that is not valid CSS, or that matches nothing on the current page, does nothing when pressed, and the other shortcuts keep working.
 
-These two shapes are the whole surface, and that is deliberate. A binding can only click something the
-page already rendered or visit a route the app already guards. Filament does not render a control the
-admin cannot use, so there is nothing to click, and your middleware stops a route they cannot open. A
-binding never calls a Livewire method or a server action directly. See [Security](security.md).
+## Choosing the letter
 
-Shared presets never accept a custom binding. Publishing an admin-supplied selector or route to every
-admin on a preset is refused whoever asks.
+The binding takes the letter the admin entered, with these exceptions:
 
-## When a binding does nothing
+- A letter outside `a` to `z` is ignored, and the binding gets an automatic letter from its name instead.
+- A navigation shortcut whose letter is pinned or stored on the same key keeps it, and the binding loses its key, because navigation comes first in the pool.
 
-- **The letter is not a–z, or sits on a reserved key.** The letter is ignored and the binding gets an
-  automatic letter from its name instead.
-- **Another pinned or stored letter holds the key.** Navigation comes before custom bindings in the
-  pool, so a navigation shortcut pinned to the same letter keeps it and the binding loses its key. A
-  binding's letter does take its key from an automatically lettered navigation shortcut, which moves.
-- **The selector matches nothing** on the current page, or is not valid CSS.
-- **The route is refused.** A route the admin cannot open navigates there and gets your app's 403.
+A binding's letter takes its key from a navigation shortcut that has the key automatically. That navigation shortcut moves to its next free letter.
 
-## Driving it from code
+## Badges
 
-Admins normally do all of this on the manage page. If you build your own interface, call the same
-use cases the page uses. They take the customization mode as a plain string, so construct them
-yourself:
+While `G` waits for its letter, the binding's badge appears on the element it clicks, or on the link whose `href` matches the path exactly. A path with no matching link on the page still works, it just shows no badge.
+
+## Security
+
+A custom binding can only click something the page already rendered, or open a path your application already protects. Filament does not render a control the admin may not use, and your middleware stops a page the admin may not open. A binding never calls a Livewire method or a server action directly.
+
+Presets never accept custom bindings, so one admin cannot publish a selector or a path to everyone else. See [Security](security.md#custom-bindings-click-they-do-not-authorize).
+
+## Managing bindings from code
+
+The **Manage shortcuts** page cannot remove a custom binding. If you need to remove one, or you are building your own interface, use the `EditUserMap` class, which is what the page uses. It takes the customization mode as a string:
 
 ```php
+use App\Filament\Resources\OrderResource;
 use Aristonis\FilamentShortcutKeys\Application\EditUserMap;
 use Aristonis\FilamentShortcutKeys\Core\Contracts\MapEditor;
-use App\Filament\Resources\OrderResource;
 use Filament\Facades\Filament;
 
 $editor = new EditUserMap(app(MapEditor::class), config('shortcut-keys.customization'));
@@ -73,19 +70,17 @@ $id = (string) $user->getAuthIdentifier();
 
 $editor->remap($type, $id, 'admin', 'navigation:' . OrderResource::class, 'o');
 $editor->disable($type, $id, 'admin', 'global:export');
-$editor->enable($type, $id, 'admin', 'global:export');   // drops the override, back to the convention
 $editor->addCustomBinding($type, $id, 'admin', 'custom:reports', 'r', ['route' => '/admin/reports']);
+
+// Remove a change or a custom binding...
+$editor->enable($type, $id, 'admin', 'custom:reports');
 ```
 
-The third argument is the panel id. A custom binding's target must start with `custom:`; the rest is
-its name, which also seeds its automatic letter. A payload that breaks the rules above throws
-`InvalidCustomBindingException`, and in `locked` mode every call throws `EditingLockedException`. Both
-live in `Aristonis\FilamentShortcutKeys\Exceptions` and extend `ShortcutKeysException`.
+The third argument is the panel ID. The fourth is the shortcut's name: `navigation:` followed by the resource or page class, `global:` followed by a header action name, or `custom:` followed by a binding name. A custom binding takes exactly one of `['route' => ...]` or `['selector' => ...]`, under the same rules as the form.
 
-`enable()` removes the override instead of storing a no-op row, so the shortcut follows whatever the
-convention says from then on rather than freezing at today's letter.
+`enable()` removes the stored change instead of saving a new one. The shortcut goes back to its default letter, from the overlay or the automatic assignment, and follows any later change to them. For a custom binding, `enable()` removes the binding.
 
-To switch an admin's active map:
+To switch an admin to another map, use the `SelectActiveMap` class:
 
 ```php
 use Aristonis\FilamentShortcutKeys\Application\SelectActiveMap;
@@ -95,8 +90,12 @@ use Aristonis\FilamentShortcutKeys\Core\Contracts\MapSelector;
     ->select($type, $id, 'admin', $mapId);
 ```
 
-Each admin has one active map per panel. Selecting a map that is neither a preset of that panel nor the
-admin's own personal map fails with a not-found.
+Each admin has one active map per panel. Selecting a map that is neither a preset of that panel nor the admin's own personal map fails with a `ModelNotFoundException`.
 
-**Take the owner from the authenticated user, never from request input.** These arguments decide whose
-map is written. Taking them from a route or body parameter would let one admin rewrite another's map.
+Both classes throw an exception that extends `Aristonis\FilamentShortcutKeys\Exceptions\ShortcutKeysException` when they refuse a change:
+
+- `EditingLockedException` for every call in `locked` mode,
+- `InvalidCustomBindingException` for a custom binding that breaks the rules above.
+
+!!! warning
+    Always take the owner from the authenticated user, never from request input. The type and ID decide whose map is written, so taking them from a route or form parameter would let one admin rewrite another admin's map.

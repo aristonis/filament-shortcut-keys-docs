@@ -1,191 +1,142 @@
-# The shortcuts
+# Shortcuts
 
-Every shortcut belongs to one of five sets. Each set decides what it binds and how its keys are pressed.
+## Introduction
 
-## The key table
+The plugin builds its shortcuts from what the panel already declares. Every shortcut belongs to a set, and each set decides what it binds and how its keys are pressed:
 
-| Set | Keys | What it covers |
+| Set | Default keys | What it binds |
 | --- | --- | --- |
 | Navigation | `G`, then a letter | Every registered resource and page |
-| Actions | bare letter | The current page's header actions |
-| Table | bare keys | The page's own table, its relation managers and its table widgets (see below) |
-| Row actions | bare letters | Record actions you register by name (see [Row actions](row-actions.md)) |
-| Custom | `G`, then a letter | Bindings an admin adds for themselves (see [Custom bindings](custom-bindings.md)) |
+| Actions | A letter | The current page's header actions |
+| Table | Fixed keys | The tables on the page. See [Table shortcuts](table-shortcuts.md). |
+| Row actions | A letter | Record actions you register. See [Row actions](row-actions.md). |
+| Custom bindings | `G`, then a letter | Keys an admin adds. See [Custom bindings](custom-bindings.md). |
 
-The table keys are fixed:
+No default shortcut asks you to hold `Ctrl`, `Alt` or `Cmd`. Browsers, operating systems and keyboard layouts already use many of those combinations (`Alt`+`D` focuses the address bar, `Alt`+`Shift` switches the layout on Windows, `Option` types characters on a Mac), and a web page cannot tell which ones are free. Navigation therefore uses a leader key, and the page's own shortcuts use single keys. You may change this per set with the [`modifiers` option](configuration.md#changing-how-keys-are-pressed).
 
-| Key | What it does |
-| --- | --- |
-| `/` | Focus the table's search field |
-| `J` / `K` | Start the row cursor, then move it down / up |
-| `↓` / `↑` | Move the cursor, while it is live |
-| `←` / `→` | Previous / next page, while the cursor is live (swapped in a right-to-left panel) |
-| `Space` | Select the cursor's row (its checkbox) |
-| `Enter` | Edit the cursor's row |
-| `Delete` | Delete the cursor's row, through Filament's own confirmation |
-| `Esc` | Release the cursor |
+## Navigating with the leader key
 
-`J` starts the cursor on the first row and `K` on the last. `Space`, `Enter`, `Delete` and row actions
-act on the row the cursor is on, so start it first. `Enter` needs an edit action on the row, `Delete` a
-delete action, and `/` a searchable table; without them the key has nothing to press.
+To open a resource or page, press `G`, release it, then press the page's letter within a second and a half. Pressing `Esc` cancels a pending `G`, and so does any key that is not bound.
 
-Keys are matched on the physical key (`event.code`), not the character it produces, so a shortcut sits
-on the same key on any keyboard layout.
+While `G` waits for its letter, each sidebar link with a shortcut shows its letter in a small badge. The cheatsheet writes these shortcuts in lower case, `g` then `o`, because they are two plain presses and not `Shift`+`G`.
 
-## Why nothing is held by default
+`G` typed into a form field stays a `g`, and `Alt`+`G` is left to the browser.
 
-Browsers, operating systems and keyboard layouts already own many `Alt` and `Ctrl` combinations
-(`Alt`+`D` focuses the address bar, `Alt`+`Shift` switches the layout on Windows, `Option` types
-characters on a Mac), and a page cannot tell which are free. So no default shortcut holds a modifier.
-Navigation and custom bindings use a leader key instead, and the page's own shortcuts use bare keys.
-If you prefer held modifiers, set them per set in the [`modifiers` config](configuration.md#modifiers).
+### Which pages get a navigation shortcut
 
-## The `G` leader
+Every resource and page registered on the panel gets a navigation shortcut, including:
 
-Press `G`, let go, then press the letter within a second and a half. `Esc` cancels a pending `G`.
-Pressing `Shift`, `Ctrl`, `Alt` or `Meta` on its own while `G` waits does not cancel it. `G` typed into
-a field stays a `G`, and `Alt`+`G` belongs to the browser.
+- pages hidden from the sidebar with `$shouldRegisterNavigation = false`,
+- the plugin's own **Keyboard shortcuts** and **Manage shortcuts** pages.
 
-The cheatsheet writes a sequence in lower case (`g` then `o`), because it is two plain presses, not
-`Shift`+`G`.
+Items you add with `$panel->navigationItems()` do not get one. To remove a page's shortcut, [disable it in the overlay](configuration.md#pinning-and-disabling-shortcuts):
 
-## Which header actions get a key
+```php
+'overlay' => [
+    'navigation:App\Filament\Pages\Settings' => ['disabled' => true],
+],
+```
 
-On bare letters, a header action only gets a key by default if a stray press is harmless:
+Every admin receives the same navigation shortcuts, whatever their permissions. A shortcut to a page the admin cannot open leads to the same 403 response as the URL would. See [Security](security.md#the-keymap-is-the-same-for-every-admin).
 
-- it opens a page (Create, Edit and View on a resource that registers those pages), or
-- it opens a modal, or
-- it asks for confirmation first.
+## Running header actions
 
-An action that does its work on the click itself gets no default key, so one stray keystroke can never
-run it. To key one anyway, pin a letter for it in the [`overlay` config](configuration.md#overlay).
-Filament cannot tell without mounting an action whether a plain form schema will open a modal, so such
-an action is treated as instant too; give it a modal heading or pin it.
+On every page, the header actions get single-letter shortcuts. Pressing the letter clicks the action, or follows its URL if it has one.
 
-On a held modifier or a leader, every header action keeps its key, since those are never pressed by
-accident.
+### Which header actions get a shortcut
 
-A header action that is hidden (`->visible(false)`, or a `visible` closure that fails for this admin)
-or disabled gets no key at all, so it never takes a letter a live action could have had. Header
-actions inside an action group dropdown get no key.
+Because a single key is easy to press by accident, a header action only gets a shortcut by default when a stray press is harmless. That is the case when the action:
 
-## How letters are picked
+- has a URL, so pressing it opens a page. This includes the Create, Edit and View actions of a resource that registers those pages.
+- opens a modal, because it has a modal heading, a modal description, modal content, or calls `modal()`.
+- requires confirmation through `requiresConfirmation()`.
 
-Each shortcut takes the first free letter of its name, then falls back through the rest of the
-alphabet. The name is the navigation label for navigation, and the action or binding name otherwise.
+An action that does its work the moment it is clicked gets no shortcut, so one stray keystroke can never run it. To give it one anyway, [pin a letter for it in the overlay](configuration.md#pinning-and-disabling-shortcuts).
 
-Shortcuts that are pressed the same way share one pool of letters and never share a key:
+!!! note
+    The plugin cannot tell that an action with only a form schema will open a modal without mounting the action. Such an action counts as running immediately. Give it a modal heading, or pin its letter:
 
-- navigation and custom bindings share the `G` pool;
-- header actions and row actions share the bare pool.
+    ```php
+    use Filament\Actions\Action;
 
-A few keys are reserved in the bare pool: `G` (the leader is pressed bare), `J` and `K` (the row
-cursor), and the other table keys. No header action or row action takes them. Row actions are lettered
-first, across the whole panel, and no header action is ever lettered automatically onto a row action's
-letter, so header letters do not change with the tables a page has.
+    Action::make('archive')
+        ->schema([
+            // ...
+        ])
+        ->modalHeading('Archive order')
+    ```
 
-Navigation letters are handed out in order of each resource's and page's navigation sort. Adding a
-screen can therefore move the letter of a later one that lost a clash. Pin the letters people rely on
-in the [`overlay` config](configuration.md#overlay); a pinned letter never moves.
+A header action never gets a shortcut, and never takes a letter, when it is:
 
-A pool has at most 26 letters (23 in the default bare pool, after `G`, `J` and `K`). Shortcuts
-beyond that get no key.
+- hidden, through `visible(false)`, `hidden()`, or a visibility closure that fails for the current admin,
+- disabled,
+- inside an action group.
 
-## When keys are ignored
+If you move header actions to a held modifier or a leader key of their own with the [`modifiers` option](configuration.md#changing-how-keys-are-pressed), every visible, enabled header action gets a shortcut, including the ones that run immediately.
 
-Bare keys and `G` sequences do not fire:
+## How letters are assigned
 
-- while an input, textarea, select or contenteditable element has focus (checkboxes, radios and buttons
-  do not count as typing);
-- while a modal, an open select, a dropdown, a menu or a tab list has the keyboard, or while any
-  Filament modal or the cheatsheet is open;
-- for `Enter` and `Space` on a focused button or link, which press that control instead;
-- for keys typed through an input method (IME);
-- right after a shortcut clicked a control that sends a Livewire request, until the response arrives
-  (at most about two seconds), so a quick second key cannot land on the row behind a modal that is
-  about to open. A key pressed in that window is dropped, not queued;
-- when the user has switched single-key shortcuts off (see below).
+Each shortcut takes the first free letter of its name, then the first free letter of the alphabet. The name is:
 
-Shortcuts on held modifiers, if you configure any, are only subject to the input-method rule; they
-still fire in all the other cases.
+- the navigation label, for navigation shortcuts,
+- the action name, for header actions and row actions,
+- the binding name, for custom bindings.
 
-## Held keys
+For example, with an **Orders** resource sorted before an **Organizations** resource, Orders gets `O` and Organizations gets `R`, because `o` is already taken.
 
-A held key fires an action once. Moving the row cursor (`J`, `K`, `↑`, `↓`) repeats while the key is
-held, like scrolling. `←` and `→` turn one page per press.
+Only the letters `a` to `z` count. Letters with accents and letters from other scripts are skipped, so a label written entirely in another script takes the first free letter of the alphabet. See [Localization](localization.md#letters-in-other-languages).
 
-## The arrows and the cursor
+### Letter pools
 
-The arrow keys scroll the page until `J` or `K` starts the row cursor, and again once you click
-somewhere else or press `Esc`, so a long page or a wide table still scrolls from the keyboard. The
-cursor holds real focus and follows the record, not the position, so a sort, a search or a refresh
-never points a row key at a different record.
+Shortcuts that are pressed the same way share one pool of letters, and two shortcuts in the same pool never get the same key. By default:
 
-## Pages with several tables
+- navigation shortcuts and custom bindings share the `G` pool,
+- header actions and row actions share the pool of single keys.
 
-A record page with relation managers, or a page or dashboard with table widgets in its header, footer
-or widget area, gets the table keys too. `J` and `K` walk the rows of every table in page order, and
-`/` and the paging arrows act on the table the cursor is in. With no cursor, `/` focuses the first
-table search field on the page.
+A few keys are reserved in the single-key pool, so no header action or row action takes them: `G` (the navigation leader), and `J` and `K` (the row cursor), along with the other [table keys](table-shortcuts.md#the-table-keys).
 
-A table placed any other way (through the page's own `content()` schema, `Livewire::make()`, or a
-widget placed through `getWidgetsSchemaComponents()`) is not detected, so that page gets no table keys
-unless it is a table page itself.
+A pool holds at most 26 letters, and the default single-key pool holds 23. A shortcut beyond that gets no key.
+
+### Assignment order
+
+Letters are handed out in this order:
+
+- **Navigation** follows each resource's and page's navigation sort.
+- **Row actions** are lettered first, across the whole panel, in the order you register them. No header action is ever given a row action's letter automatically, on any page.
+- **Header actions** follow the order in which the page declares them.
+
+Because navigation follows the navigation sort, adding a resource can move the letter of a later one that lost a clash.
+
+!!! tip
+    Pin the letters people rely on with the [overlay](configuration.md#pinning-and-disabling-shortcuts). A pinned letter does not move when you add or remove other shortcuts.
+
+## When shortcuts are ignored
+
+Single-key shortcuts and `G` sequences do not fire:
+
+- while a text input, a textarea, a select or an editable element has focus. Checkboxes, radio buttons, buttons and other inputs that take no text do not count.
+- while focus is inside a modal, a dropdown, a menu, a list box or a tab list, or while any Filament modal or the cheatsheet is open.
+- when `Enter` or `Space` is pressed on a focused button or link, which presses that control instead.
+- while text is being composed through an input method (IME).
+- right after a shortcut clicked a control that sends a Livewire request, until the response arrives or at most about two seconds have passed. A key pressed in that window is dropped, not queued, so it cannot land on the row behind a modal that is about to open.
+- when the user has [turned off single-key shortcuts](accessibility.md#turning-off-single-key-shortcuts).
+
+Shortcuts on a held modifier, if you configure any, are only ignored during input-method composition. They fire in all the other cases.
+
+## Holding a key down
+
+A held key fires its shortcut once. The exceptions are the keys that move the row cursor, `J`, `K`, `↑` and `↓`, which repeat while held, like scrolling. `←` and `→` change one page per press.
+
+## Physical keys
+
+Shortcuts are matched on the physical key, not on the character it types. A shortcut therefore works the same whichever keyboard layout is active, including a layout that types another script. On layouts other than US QWERTY, some keys carry a different letter than the one shown. See [Localization](localization.md#keyboard-layouts).
 
 ## The cheatsheet
 
-`?` (`Shift` + `/`) opens a cheatsheet of everything active on the current page; `?` again or `Esc`
-closes it. It is not opened while you are typing in a field.
+Press `?` (`Shift`+`/`) on any page to open the cheatsheet. It lists every shortcut active on the current page, grouped by set, with each shortcut's label. Press `?` again, press `Esc`, or click outside it to close it. The cheatsheet does not open while you are typing in a field.
 
-The cheatsheet has a **Single-key shortcuts** switch. Turning it off silences every bare key and every
-`G` sequence in that browser, which assistive technology and voice control users may need. The choice
-is stored in the browser's local storage under `filament-shortcut-keys:single-keys`. Shortcuts on held
-modifiers, if configured, keep working.
+The cheatsheet also holds the [single-key shortcuts switch](accessibility.md#turning-off-single-key-shortcuts) and a link to the **Keyboard shortcuts** page.
 
 ## The Keyboard shortcuts page
 
-The plugin adds a "Keyboard shortcuts" page to the sidebar. It lists what is the same everywhere in the
-panel for the current admin: navigation, their custom bindings, the table keys and the row-action
-letters. Header actions change from page to page, so they are only in the cheatsheet. The cheatsheet
-links to this page.
-
-## Key badges
-
-Where a shortcut maps to one stable element, the plugin paints a small key badge on it: navigation
-links, header actions and an admin's custom bindings. Badges for `G` shortcuts appear only while `G`
-waits for its letter, so the sidebar is not covered in letters the rest of the time. With single-key
-shortcuts off, badges for bare and `G` keys are hidden.
-
-Table keys and row actions get no badge. A table key has no single element behind it, and a row action
-repeats on every row. Both are in the cheatsheet.
-
-The badge is marked `aria-hidden`, so a screen reader reads only the control's own label. The key is
-announced through `aria-keyshortcuts` on the control instead. A `G` sequence gets no
-`aria-keyshortcuts`, because that attribute reads spaces as alternatives (`G O` would mean "G or O");
-the cheatsheet lists those. A value your app already put on the control is left alone.
-
-## Styling hooks
-
-The plugin ships no stylesheet; its marks are styled inline.
-
-- `fi-hotkey-hint`: the class on the badge `span`. Restyle it from your panel's stylesheet.
-- `fi-hotkey-row-focused`: the class on the row the cursor is on, which also carries an inline
-  outline. An `outline` rule on this class needs `!important` to beat the inline one.
-
-```css
-.fi-hotkey-row-focused {
-    outline: 2px solid var(--primary-500) !important;
-}
-```
-
-## Which shortcut wins
-
-When one key could match more than one active set, the browser side checks them in a fixed order:
-
-```
-custom > table > global > navigation
-```
-
-Row actions are fired by the table handler, so they sit at the table tier. With the shipped sets two
-groups cannot reach the same key combination, because each pool is lettered once and the table's keys
-are reserved, so this order rarely matters.
+The plugin adds a **Keyboard shortcuts** page to the panel's navigation. It lists the shortcuts that are the same on every page for the current admin: navigation, their custom bindings, the table keys and the row action letters. Header actions change from page to page, so they only appear in the cheatsheet.

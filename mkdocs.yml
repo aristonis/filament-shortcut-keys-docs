@@ -36,19 +36,20 @@ theme:
 # Explicit nav — paths are language-agnostic; the i18n plugin resolves each
 # entry to docs/en/... or docs/ar/... per the active locale.
 nav:
-  - Home: index.md
-  - Getting started: getting-started.md
-  - The shortcuts: shortcuts.md
+  - Introduction: index.md
+  - Installation: installation.md
+  - Shortcuts: shortcuts.md
+  - Table shortcuts: table-shortcuts.md
   - Row actions: row-actions.md
   - Letting admins customize: customization.md
   - Custom bindings: custom-bindings.md
   - Configuration: configuration.md
-  - Pruning dead overrides: maintenance.md
-  - Translations: translations.md
+  - Commands: commands.md
+  - Localization: localization.md
+  - Accessibility: accessibility.md
   - Security: security.md
   - Troubleshooting: troubleshooting.md
   - Limitations: limitations.md
-  - Architecture: architecture.md
 
 plugins:
   - search

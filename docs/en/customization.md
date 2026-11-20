@@ -1,132 +1,140 @@
 # Letting admins customize
 
-Two separate permissions control who changes keys:
+## Introduction
 
-- **Personal customization**, set by `customization` (`personal` or `locked`). It lets an admin change
-  their *own* keys and touches nobody else.
-- **Authoring**, set by `authorize`. It lets someone change the shared presets and choose the panel
-  default. It is denied by default and is not implied by being an admin.
+Two separate settings control who may change shortcuts:
 
-## Personal and locked
+- The `customization` option decides whether each admin may change their **own** keys. It never affects anyone else.
+- The `authorize` option decides who may edit the **shared presets** and choose the panel's default preset. It denies everyone by default, and being an admin does not grant it.
+
+Both options live in `config/shortcut-keys.php`. See [Publishing the configuration](installation.md#publishing-the-configuration).
+
+## Choosing a customization mode
+
+Set the `customization` option to `personal` or `locked`:
 
 ```php
-// config/shortcut-keys.php
-'customization' => 'personal', // or 'locked'
+'customization' => 'personal',
 ```
 
-**`personal`** (the default) gives each admin the "Manage shortcuts" page, where they can switch
-between the presets you publish and customize their own keys.
+### Personal mode
 
-**`locked`** turns personal editing off. Admins use the panel's default preset, which an authorized
-admin sets on the manage page; with no default set, they get the automatic conventions. An admin who
-already had a selection when the panel was switched to `locked`, either a preset they picked or a map
-they had customized, keeps it and can no longer change it. In `locked` mode the manage page is only
-reachable for someone who passes the authoring gate.
+`personal` is the default. Every admin can open the **Manage shortcuts** page, choose between the presets you publish, remap and disable their own navigation shortcuts, and add [custom bindings](custom-bindings.md).
+
+### Locked mode
+
+`locked` turns personal editing off:
+
+```php
+'customization' => 'locked',
+```
+
+Admins use the panel's default preset, which an authorized admin sets on the **Manage shortcuts** page. When no default is set, they get the automatic shortcuts.
+
+An admin who already had a selection when you switched the panel to `locked`, either a preset they picked or a personal map, keeps it and can no longer change it.
+
+In `locked` mode, only admins who pass the [authoring gate](#granting-authoring-access) can open the **Manage shortcuts** page.
 
 ## The Manage shortcuts page
 
-In `personal` mode every admin sees these actions:
+In `personal` mode, every admin sees these actions on the **Manage shortcuts** page:
 
 | Action | What it does |
 | --- | --- |
 | Change active map | Switch to one of the panel's presets, or back to "Your customizations" |
 | Remap a shortcut | Put a navigation shortcut on another letter |
 | Disable a shortcut | Remove a navigation shortcut |
-| Reset to default | Drop your override for one shortcut |
-| Add custom binding | Bind a key to a page in the app or an element on the page (see [Custom bindings](custom-bindings.md)) |
+| Reset to default | Remove your change to one shortcut |
+| Add custom binding | Bind a key to a page in the app or an element on the page. See [Custom bindings](custom-bindings.md). |
 
-The page offers navigation targets only. Header-action, table and row-action keys are moved by a
-developer through the [config overlay](configuration.md#overlay).
+The page offers navigation shortcuts only. Header action, table and row action keys are changed by a developer through the [overlay](configuration.md#pinning-and-disabling-shortcuts).
 
-A remapped letter is ignored, and the shortcut keeps its automatic letter, when it is not a–z or sits on
-a reserved key. See [forced letters](configuration.md#forced-letters).
+A letter outside `a` to `z` is ignored, and the shortcut keeps the letter it would otherwise have.
 
-## Forking on first edit
+## How personal maps work
 
-An admin never edits a shared map. Their first edit copies the map they are using (the selected preset,
-or the panel default) into a private map, points their selection at it, and stores the change there.
-The shared map is untouched.
+An admin never edits a shared preset. Their first change copies the map they are currently using, either the preset they selected or the panel default, into a personal map, selects it, and saves the change there. The preset itself is not changed.
 
-A personal map stores only differences. Everything it does not mention follows the live conventions,
-which is why a resource added next month still gets a key in a map customized today. It does not follow
-the preset it was copied from: later edits to that preset do not reach it. "Reset to default" drops the
-override, so the shortcut goes back to its automatic letter rather than the preset's. To go back to a
-preset wholesale, select it with "Change active map"; the personal map stays in the list for later.
+A personal map stores only the admin's changes. Everything it does not mention keeps its automatic shortcut, so a resource you add next month still gets a key in a map an admin customized today.
 
-## The authoring gate
+The copy is made once. Later changes to the preset it came from do not reach the personal map. **Reset to default** removes the admin's change, so the shortcut goes back to its automatic letter, not to the preset's letter. To go back to a preset entirely, the admin selects it with **Change active map**. Their personal map stays in the list for later.
 
-Grant authoring with a Gate ability (recommended) or a closure:
+## Granting authoring access
+
+Authoring lets an admin create and edit the shared presets and choose the panel's default preset. Grant it with the `authorize` option, either as the name of a [gate](https://laravel.com/docs/authorization#gates) ability or as a closure.
+
+We recommend a gate ability. Define it in a service provider. The ability receives the panel ID as its argument:
 
 ```php
-// config/shortcut-keys.php
+use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 
-// the name of an ability you defined
+public function boot(): void
+{
+    Gate::define('manage-shortcut-keys', function (User $user, string $panelId): bool {
+        return $user->is_developer;
+    });
+}
+```
+
+Then name the ability in the configuration file:
+
+```php
 'authorize' => 'manage-shortcut-keys',
-
-// or a closure; needs `use Illuminate\Contracts\Auth\Authenticatable;` at the top of the file
-'authorize' => fn (?Authenticatable $user, string $panelId) => $user?->isDeveloper() ?? false,
 ```
+
+The ability is checked as `Gate::forUser($user)->allows('manage-shortcut-keys', $panelId)`. A visitor who is not signed in is denied before the gate is asked. A `Gate::before()` callback, such as a super-admin rule, runs before every ability and can grant this one too.
+
+You may use a closure instead. It receives the user, which may be `null`, and the panel ID:
 
 ```php
-// app/Providers/AppServiceProvider.php
-Gate::define('manage-shortcut-keys', fn (User $user, string $panelId) => $user->is_developer);
+use Illuminate\Contracts\Auth\Authenticatable;
+
+'authorize' => fn (?Authenticatable $user, string $panelId): bool => $user?->is_developer ?? false,
 ```
 
-Prefer the ability. A closure in a config file cannot be serialized, so `php artisan config:cache`
-fails while one is there.
+Only a return value of exactly `true` grants authoring. A truthy value such as `1` or `'yes'` denies.
 
-- A string is checked as `Gate::forUser($user)->allows($ability, $panelId)`. A visitor with no user is
-  denied before the gate is asked. A `Gate::before` callback, such as a super-admin rule, runs before
-  every ability and can grant this one too.
-- A closure receives the user (possibly null) and the panel id, so one config can answer per panel. Only
-  a strict `true` grants; a truthy value like `1` or `'yes'` denies.
-- `null`, or anything else, denies everyone.
+!!! warning
+    A closure in a configuration file cannot be serialized, so `php artisan config:cache` fails while the closure is there. Use a gate ability in any application that caches its configuration.
 
-## What authors can do
+`null`, the default, denies everyone, and so does any other value.
 
-Whoever passes the gate gets four more actions on the manage page:
+## Managing presets
+
+An admin who passes the authoring gate sees four more actions on the **Manage shortcuts** page:
 
 | Action | What it does |
 | --- | --- |
-| Create preset | A new, empty preset for the panel. It is not the default. |
-| Clone preset | A copy of an existing preset, including its overrides |
-| Edit preset | Put a navigation shortcut on another letter, in place, for everyone on that preset |
-| Set panel default | The preset every admin without their own selection uses; in `locked` mode, everyone |
+| Create preset | Add a new, empty preset to the panel. It is not the default. |
+| Clone preset | Copy an existing preset, including its changes |
+| Edit preset | Put a navigation shortcut on another letter, for everyone using that preset |
+| Set panel default | Choose the preset every admin without a selection of their own uses. In `locked` mode, that is everyone. |
 
-Editing a preset in place and changing the default both change keys for other admins, so both forms
-require an explicit confirmation checkbox before they save. A preset holds letters and disables, never
-a custom binding. The edit form sets letters; a disable can be written from code with
-`AuthorSystemMap::editInPlace()`, which runs the same gate and confirmation checks.
+Editing a preset and changing the default both change keys for other admins, so both forms ask for an explicit confirmation before they save.
 
-Passing the gate does not reach another panel's maps: every lookup is scoped to the current panel, and
-a map id from another panel is treated as not found.
+A preset holds letters and disabled shortcuts, never custom bindings. The **Edit preset** form sets letters. To disable a shortcut in a preset, call `AuthorSystemMap::editInPlace()` from your own code, which runs the same authorization and confirmation checks.
 
-## How the layers combine
+Passing the gate on one panel gives no access to another panel's presets.
 
-For each shortcut, in order:
-
-1. The **conventions** discover it. Table keys arrive with their fixed keys; everything else has no
-   letter yet. On bare keys, an instant header action starts switched off.
-2. The **config overlay** pins a letter (which also switches on an instant header action) or disables
-   it.
-3. The admin's **active map** applies: their personal map, the preset they selected, or the panel
-   default. A stored letter replaces a letter the overlay pinned; a stored disable turns the shortcut
-   off. A stored letter cannot bring back a shortcut the overlay disabled.
-4. The admin's **custom bindings** are added.
-5. Disabled shortcuts are removed, so their letters go back to the pool.
-6. **Letters are assigned** in each pool. Pinned and stored letters are placed first and take their key
-   from any automatically lettered shortcut, which moves to another free letter.
-
-So an overlay disable always wins, while an admin's stored letter beats an overlay letter. If two
-pinned or stored letters land on one key, the first in pool order keeps it (navigation before custom
-bindings, header actions before row actions) and the other loses its key.
-
-## Who sees which map
+## Which map an admin uses
 
 | Situation | Map used |
 | --- | --- |
-| No selection, no default set | Conventions (plus the overlay) |
-| No selection, default set | The panel default |
+| No selection, no default preset | The automatic shortcuts and the overlay |
+| No selection, a default preset is set | The default preset |
 | Selected a preset (`personal` mode) | That preset |
-| Has edited their keys (`personal` mode) | Their personal map |
-| `locked` mode | Any earlier selection, otherwise the panel default, otherwise conventions |
+| Changed a shortcut (`personal` mode) | Their personal map |
+| `locked` mode | Their earlier selection, otherwise the default preset, otherwise the automatic shortcuts |
+
+## How changes combine
+
+A shortcut can be changed in three places: the [overlay](configuration.md#pinning-and-disabling-shortcuts) in your configuration file, the admin's active map (their personal map or a preset), and, for custom bindings, the admin's own bindings. They combine as follows:
+
+- **An overlay disable always wins.** Nothing in a map can bring that shortcut back.
+- **A letter stored in the admin's map replaces a letter pinned in the overlay.**
+- **A shortcut disabled in the admin's map is removed**, even if the overlay pins a letter for it.
+- **A disabled shortcut frees its letter** for the other shortcuts in its pool.
+- **A pinned or stored letter takes its key from an automatic one.** The shortcut that had the key automatically moves to its next free letter.
+- **When two pinned or stored letters land on the same key, the first one keeps it.** Navigation comes before custom bindings, and header actions before row actions. The other shortcut loses its key.
+- **A letter that is not `a` to `z`, or that is a reserved key in its pool, is ignored.** The shortcut keeps the letter it would otherwise have.

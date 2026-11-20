@@ -1,67 +1,54 @@
 # Security
 
-The plugin's security model is short: a shortcut only ever does what the admin could have done with
-the mouse. It clicks the real Filament control or follows the real route. It never invents an action
-and never calls a Livewire method directly, so your policies, middleware and confirmation modals apply
-exactly as they would to a click.
+## Introduction
 
-## The keymap is public
+A shortcut only ever does what the admin could have done with the mouse. It clicks the real Filament control or follows the real URL. It never creates an action of its own and never calls a Livewire method directly, so your policies, middleware and confirmation modals apply exactly as they would to a click.
 
-The keymap is built from every registered resource and page, without a `canAccess` check, so every
-admin receives the same list of shortcuts whatever their permissions. Pressing a key navigates or
-clicks, and your own policies and middleware decide what happens next:
+## The keymap is the same for every admin
 
-- an unauthorized header or row action is not rendered by Filament, so its key has nothing to click;
-- an unauthorized page is stopped by your middleware or Filament's access check, so its key leads to a
-  403.
+The navigation shortcuts are built from every resource and page registered on the panel, without checking whether the current admin may open them. Every admin receives the same navigation shortcuts. When a key is pressed, your own authorization decides what happens:
 
-This is deliberate. Filtering the map per user would add no protection, since access is enforced when
-the key fires, and it would turn one shared cache entry into one per permission set. The practical
-consequence is that the keymap reveals which pages *exist*, not what an admin may do. If the mere
-existence of a page is sensitive in your app, do not rely on the shortcut layer to hide it; such a page
-does not belong in the panel's navigation.
+- Filament does not render a header action or row action the admin is not authorized for, so its key has nothing to click.
+- A page the admin may not open is stopped by your middleware or Filament's access check, so its key leads to a 403 response.
 
-The plugin's own "Manage shortcuts" page follows the same rule: it can appear in the keymap for an
-admin who cannot open it.
+Filtering the keymap per admin would add no protection, because access is checked when the key is used. As a result, the keymap reveals which pages exist, but not what an admin may do. This includes the plugin's own **Manage shortcuts** page, which appears in the keymap even for an admin who cannot open it.
 
-## Selector bindings click, they do not authorize
+!!! warning
+    If the existence of a page must stay hidden from some admins, do not rely on the shortcut layer to hide it. Such a page does not belong in the panel's registered pages.
 
-A custom binding with a `selector` payload performs a click on an element already on the page.
-Anything reachable that way must enforce its own server-side authorization, exactly as it would for a
-mouse click. A `route` payload must be a host-relative path (`/admin/orders`); schemes such as
-`javascript:` and protocol-relative `//host` URLs are rejected when the binding is saved. See
-[Custom bindings](custom-bindings.md#the-security-boundary).
+## Custom bindings click, they do not authorize
 
-Shared presets never accept a custom binding, so one admin cannot push a selector or route to everyone
-else.
+A custom binding with a selector clicks an element that is already on the page. Anything reachable that way must enforce its own server-side authorization, exactly as it would for a mouse click.
 
-The keymap is injected into the page as a JSON block with HTML-significant characters escaped, so a
-selector or route value cannot break out of it.
+A custom binding with a path must use a path in your application, such as `/admin/orders`. Full URLs, protocol-relative URLs such as `//example.com` and schemes such as `javascript:` are rejected when the binding is saved. See [Custom bindings](custom-bindings.md#security).
 
-## Owner identity comes from the authenticated user
+Presets never accept custom bindings, so one admin cannot push a selector or a path to everyone else.
 
-The plugin's own pages derive the map owner from `Filament::auth()->user()`. If you call the
-application use cases yourself (`EditUserMap`, `SelectActiveMap`), keep doing the same. Passing an
-owner type or id from a request parameter would let one admin read and rewrite another admin's map.
+The keymap is added to the page as JSON with HTML-significant characters escaped, so a selector or path cannot break out of it.
 
-Map ownership is stored as the user model's morph class and compared as a string, so renaming the
-user model orphans every stored map. If you might rename it, register a morph map before admins start
-customizing (registering one later changes the morph class too):
+## Taking the owner from the authenticated user
+
+The plugin's own pages read the map owner from `Filament::auth()->user()`. If you call `EditUserMap` or `SelectActiveMap` yourself, do the same. Taking the owner's type or ID from a request parameter would let one admin read and rewrite another admin's map.
+
+## Renaming the user model
+
+A map's owner is stored as the user model's morph class. If you rename the user model, every stored map loses its owner. If you might rename it, register a morph map before admins start customizing their shortcuts:
 
 ```php
+use App\Models\User;
+use Illuminate\Database\Eloquent\Relations\Relation;
+
 Relation::enforceMorphMap([
-    'user' => App\Models\User::class,
+    'user' => User::class,
 ]);
 ```
 
+Registering a morph map later changes the morph class too, so it has the same effect as a rename.
+
 ## Authoring is denied by default
 
-Editing the shared presets is a separate permission from personal customization, and `authorize`
-denies everyone until you grant it. A closure must return exactly `true`; anything else denies. Every
-authoring lookup is scoped to the current panel, so a manager on one panel cannot reach another
-panel's maps. See [the authoring gate](customization.md#the-authoring-gate).
+Editing the shared presets is a separate permission from personal customization, and the `authorize` option denies everyone until you grant it. A closure must return exactly `true`. Every authoring action is limited to the current panel, so an author on one panel cannot reach another panel's presets. See [Granting authoring access](customization.md#granting-authoring-access).
 
 ## Reporting a vulnerability
 
-Please do not open a public issue. Follow the security policy in the
-[GitHub repository](https://github.com/aristonis/filament-shortcut-keys/security/policy).
+Please do not open a public issue. Follow the security policy in the [GitHub repository](https://github.com/aristonis/filament-shortcut-keys/security/policy).

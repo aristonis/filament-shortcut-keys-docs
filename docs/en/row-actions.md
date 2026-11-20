@@ -1,42 +1,56 @@
 # Row actions
 
-Table record actions are per row, so the plugin only binds the ones you name. Register the names once
-and they work on every table in the panel that exposes an action of that name, relation manager and
-widget tables included, firing against the row the cursor is on.
+## Introduction
 
-## Register
+Table record actions repeat on every row, so the plugin only gives a shortcut to the ones you name. You register the names once on the plugin, and each one gets a letter that works on every table in the panel that has a record action of that name, including relation managers and table widgets. Pressing the letter clicks the action on the [cursor's row](table-shortcuts.md#using-the-row-cursor).
+
+## Registering row actions
+
+Pass the action names to the `rowActions()` method when you register the plugin:
 
 ```php
 use Aristonis\FilamentShortcutKeys\FilamentShortcutKeysPlugin;
+use Filament\Panel;
 
-$panel->plugin(
-    FilamentShortcutKeysPlugin::make()
-        ->rowActions(['approve', 'reject', 'suspend'])
-);
+public function panel(Panel $panel): Panel
+{
+    return $panel
+        // ...
+        ->plugin(
+            FilamentShortcutKeysPlugin::make()
+                ->rowActions(['approve', 'reject', 'suspend'])
+        );
+}
 ```
 
-These are names only, matched against the action names your tables already declare. You are not
-defining actions here, only saying which existing ones deserve a key.
+These are the names your tables already give their record actions, such as `Action::make('approve')`. You are not defining actions here, only choosing which existing ones get a key.
 
-Pressing the key clicks the real Filament record action on the cursor's row, with its own
-authorization and confirmation. Start the cursor with `J` or `K` first.
+Pressing the key clicks the real Filament action on the cursor's row, so the action's authorization, visibility and confirmation apply as they would to a click. Record actions inside an action group are included. See [Limitations](limitations.md#what-gets-a-shortcut).
+
+### Edit, delete and view
+
+`edit` and `delete` already have the `Enter` and `Delete` [table keys](table-shortcuts.md#the-table-keys), so registering them has no effect.
+
+`view` has no key by default. To give it one, register `view` like any other name.
 
 ## How letters are assigned
 
-Each name gets a bare letter, assigned across the **full** registered list rather than per page. So
-`approve` keeps the same key whether or not `reject` happens to be on the current table, and the key
-does not move as you navigate.
+Row action letters are assigned across the whole list you register, not per page. `approve` keeps the same key whether or not `reject` is on the current table, so the key does not change as you move around the panel.
 
-The list is ordered. Each name takes the first free letter of the name itself, so whoever comes first
-picks first:
+The list is ordered. Each name takes the first free letter of the name itself, so a name earlier in the list chooses first:
 
 ```php
 ->rowActions(['reject', 'refund'])   // reject: R, refund: E
 ->rowActions(['refund', 'reject'])   // refund: R, reject: E
 ```
 
-Sorting the array alphabetically during a cleanup therefore rekeys the panel. If a letter has to
-survive a reordering, pin it in the [config overlay](configuration.md#overlay):
+Sorting the list differently therefore changes the keys.
+
+Row actions share the single-key pool with header actions, so the two never collide. No row action takes `G`, `J` or `K`, and no header action is ever given a registered row action's letter automatically, on any page. Adding a header action never moves a row action's letter, and adding a relation manager or a table widget to a page never moves a header action's letter. Registering a new row action can move a header action's letter.
+
+## Pinning a row action's letter
+
+To keep a letter when the list changes, pin it in the [overlay](configuration.md#pinning-and-disabling-shortcuts):
 
 ```php
 'overlay' => [
@@ -44,59 +58,37 @@ survive a reordering, pin it in the [config overlay](configuration.md#overlay):
 ],
 ```
 
-Row actions are lettered before the overlay applies, so their letters count as pinned. Pinning one onto
-a letter a sibling row action already holds leaves two pinned letters on one key, and the one later in
-`->rowActions([...])` loses its key. With `['approve', 'reject']`, pinning `approve` to `r` gives
-approve `R` and leaves reject with no key. Pin both, or pick a letter no sibling has. Row actions do
-step around letters the overlay pins for header actions.
+!!! warning
+    A pinned letter that another registered row action already holds leaves two row actions on one key. The one later in the `rowActions()` list loses its key. With `['approve', 'reject']`, pinning `approve` to `r` gives approve `R` and leaves reject with no key. Pin both, or choose a letter no other row action has.
 
-## Reserved keys
+Row actions automatically step around letters pinned for header actions.
 
-Row actions share the bare pool with header actions, so the two never collide. A row action never gets
-a key reserved in that pool: `G` (the navigation leader), `J` and `K` (the row cursor) and the other
-table keys. Putting row actions on modifiers of their own, for example `'row-action' => ['alt']`,
-frees those letters.
+## Giving row actions their own modifier
 
-No header action is lettered automatically onto a registered row action's letter, on any page,
-including pages with no table. Registering a new name can therefore move a header action's letter
-panel-wide, but adding a header action never moves a row action's letter, and adding a relation
-manager or a table widget to a page never moves a header action's.
+Row actions use single keys by default. To free `G`, `J` and `K` for them, or to keep them apart from header actions, put them on a held modifier with the [`modifiers` option](configuration.md#changing-how-keys-are-pressed):
 
-## Edit, delete and view
+```php
+'modifiers' => [
+    'row-action' => ['alt'],
+],
+```
 
-`edit` and `delete` are already bound to `Enter` and `Delete` by the table keys, so leave them out.
-Registering them does nothing.
+## Row actions on relation managers and widgets
 
-`view` is not bound by default. If you want a key for it, register `view` like any other name.
+On a page whose only table is its own, a row action gets a key only when that table has a record action of that name. On other pages it has no key and does not appear in the cheatsheet, so the cheatsheet never lists a key that does nothing.
 
-## Nested tables
+Relation managers and table widgets load after the page, so the page cannot know their actions when it builds the keymap. On a page with one, every registered name gets its key. The cheatsheet checks the page each time it opens and lists a row action only while a row with that action is on the page. An empty or filtered-out table shows none.
 
-On a page whose only table is its own, a row action is bound only when that table exposes a record
-action of that name. Everywhere else it is neither bound nor listed, so the cheatsheet never advertises
-a dead key.
-
-Relation managers and table widgets load after the page, so the page cannot know their actions when it
-builds the keymap. On a page with one, every registered name is bound. The cheatsheet checks the page
-each time it opens and lists a row action only while a row carrying it is on the page; an empty or
-filtered-out table shows none. There it is labelled from its name (`mark_paid` reads "Mark paid"),
-because the page cannot read a label the action sets itself.
+In that case the cheatsheet labels the row action from its name, so `mark_paid` reads "Mark paid", because the page cannot read a label the action sets itself.
 
 ## Why a registered action has no key
 
-In order of likelihood:
+If a row action you registered has no key, check these causes in order:
 
-1. **The table does not declare the action.** The page filter is working as intended.
-2. **The action is a header action, not a record action.** Header actions belong to the actions set.
-3. **The action is inside an action group.** Filament flattens record-action groups, so a grouped row
-   action is still bound and listed; whether the key reaches a control inside a collapsed dropdown has
-   not been verified.
-4. **The user is not authorized for it**, so Filament never rendered the control. The key exists and
-   does nothing, which is the intended security model.
-5. **The page cannot see the table.** Only a page's own table, its relation managers, and header,
-   footer or dashboard table widgets are detected. A table placed through the page's `content()`
-   schema or `Livewire::make()`, or a widget placed through `getWidgetsSchemaComponents()`, gets no
-   table keys and no row actions unless the page is a table page itself.
-6. **Its letter was taken.** Another pinned letter on the same key won (see above), or the bare pool
-   ran out of letters.
+1. The table does not have a record action with that name.
+2. The action is a header action, not a record action. Header actions get keys of their own, described in [Shortcuts](shortcuts.md#running-header-actions).
+3. The admin is not authorized for the action, so Filament does not render it on the row. The key exists and does nothing, which is intended.
+4. The page cannot see the table. See [Pages with several tables](table-shortcuts.md#pages-with-several-tables).
+5. The letter was taken by another pinned letter, or the single-key pool ran out of letters.
 
-The "Manage shortcuts" page does not offer row-action keys. Move them with the config overlay.
+The **Manage shortcuts** page does not offer row action keys. Change them with the overlay.
