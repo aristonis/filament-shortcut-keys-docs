@@ -16,6 +16,8 @@ php artisan shortcut-keys:prune
 
 By default, the command checks every panel that registers the plugin. It prints what it found before it deletes anything. In the `production` environment, it asks for confirmation before deleting.
 
+In [`config` mode](customization.md#config-mode), nothing is stored, so the command checks no panel. It prints `Customization is 'config', so nothing is stored and there is nothing to prune.` and exits successfully, so a scheduled prune keeps working.
+
 ### Options
 
 | Option | Effect |

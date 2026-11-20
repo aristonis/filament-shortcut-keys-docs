@@ -98,7 +98,7 @@ use Aristonis\FilamentShortcutKeys\Core\Contracts\MapSelector;
 
 يرمي كلا الصنفين استثناءً يرث من `Aristonis\FilamentShortcutKeys\Exceptions\ShortcutKeysException` عندما يرفضان تغييرًا:
 
-- `EditingLockedException` لكل استدعاء في وضع `locked`،
+- `EditingLockedException` لكل استدعاء في وضع `locked` أو `config`،
 - `InvalidCustomBindingException` للربط المخصّص الذي يخالف القواعد المذكورة أعلاه.
 
 !!! warning

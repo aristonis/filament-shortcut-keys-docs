@@ -42,13 +42,13 @@ return [
 
 ## اختيار وضع التخصيص
 
-الخيار `customization` إمّا `'personal'`، وهو الافتراضي، وإمّا `'locked'`:
+الخيار `customization` هو `'personal'`، وهو الافتراضي، أو `'locked'` أو `'config'`:
 
 ```php
 'customization' => 'locked',
 ```
 
-انظر [اختيار وضع التخصيص](customization.md#choosing-a-customization-mode).
+أيّ قيمة أخرى ترمي `ValueError`. انظر [اختيار وضع التخصيص](customization.md#choosing-a-customization-mode).
 
 <a id="changing-how-keys-are-pressed"></a>
 

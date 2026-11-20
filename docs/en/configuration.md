@@ -42,13 +42,13 @@ return [
 
 ## Choosing the customization mode
 
-The `customization` option is either `'personal'`, the default, or `'locked'`:
+The `customization` option is `'personal'`, the default, `'locked'` or `'config'`:
 
 ```php
 'customization' => 'locked',
 ```
 
-See [Choosing a customization mode](customization.md#choosing-a-customization-mode).
+Any other value throws a `ValueError`. See [Choosing a customization mode](customization.md#choosing-a-customization-mode).
 
 ## Changing how keys are pressed
 

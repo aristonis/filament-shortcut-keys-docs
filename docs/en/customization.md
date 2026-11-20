@@ -11,11 +11,13 @@ Both options live in `config/shortcut-keys.php`. See [Publishing the configurati
 
 ## Choosing a customization mode
 
-Set the `customization` option to `personal` or `locked`:
+Set the `customization` option to `personal`, `locked` or `config`:
 
 ```php
 'customization' => 'personal',
 ```
+
+Any other value throws a `ValueError`, so a typo cannot quietly turn storage on or off.
 
 ### Personal mode
 
@@ -34,6 +36,22 @@ Admins use the panel's default preset, which an authorized admin sets on the **M
 An admin who already had a selection when you switched the panel to `locked`, either a preset they picked or a personal map, keeps it and can no longer change it.
 
 In `locked` mode, only admins who pass the [authoring gate](#granting-authoring-access) can open the **Manage shortcuts** page.
+
+### Config mode
+
+`config` keeps every key in your code. Nothing is read from or written to the database:
+
+```php
+'customization' => 'config',
+```
+
+Keys come only from the automatic shortcuts and the `modifiers` and [`overlay`](configuration.md#pinning-and-disabling-shortcuts) options in your configuration file. The plugin never queries its tables, so [running the migrations](installation.md#running-the-migrations) is optional.
+
+The **Manage shortcuts** page is not registered, not even for admins who pass the [authoring gate](#granting-authoring-access). The **Keyboard shortcuts** page, the cheatsheet, the badges and every key work as they do in the other modes. A write from your own code, through `EditUserMap`, `SelectActiveMap` or `AuthorSystemMap`, throws an `EditingLockedException`.
+
+Maps stored before you switched a panel to `config` are ignored, not deleted. They apply again if you switch back.
+
+Choose `config` mode when admins should not change their keys and you want the whole keymap in version control, or when you would rather not add the plugin's tables to your database. If an authorized admin should be able to change the shared map from the panel, use `locked` mode instead.
 
 ## The Manage shortcuts page
 
@@ -126,6 +144,7 @@ Passing the gate on one panel gives no access to another panel's presets.
 | Selected a preset (`personal` mode) | That preset |
 | Changed a shortcut (`personal` mode) | Their personal map |
 | `locked` mode | Their earlier selection, otherwise the default preset, otherwise the automatic shortcuts |
+| `config` mode | The automatic shortcuts and the overlay |
 
 ## How changes combine
 

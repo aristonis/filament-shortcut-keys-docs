@@ -94,7 +94,7 @@ Each admin has one active map per panel. Selecting a map that is neither a prese
 
 Both classes throw an exception that extends `Aristonis\FilamentShortcutKeys\Exceptions\ShortcutKeysException` when they refuse a change:
 
-- `EditingLockedException` for every call in `locked` mode,
+- `EditingLockedException` for every call in `locked` or `config` mode,
 - `InvalidCustomBindingException` for a custom binding that breaks the rules above.
 
 !!! warning

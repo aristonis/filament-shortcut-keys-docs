@@ -21,6 +21,8 @@ composer require aristonis/filament-shortcut-keys
 
 يكتشف Laravel مزوّد الخدمة (`service provider`) الخاص بالحزمة تلقائيًا.
 
+<a id="running-the-migrations"></a>
+
 ## تشغيل الـ `migrations`
 
 تخزّن الإضافة في قاعدة البيانات الإعداداتِ المسبقة المشتركة، وتجاوزات كل مشرف، والخريطة التي اختارها كل مشرف. انشر الـ `migrations` ثم شغّلها:
@@ -30,7 +32,7 @@ php artisan vendor:publish --tag="filament-shortcut-keys-migrations"
 php artisan migrate
 ```
 
-تحتاج إلى هذه الجداول في كلا [وضعَي التخصيص](customization.md#choosing-a-customization-mode)، بما في ذلك `locked`.
+تحتاج إلى هذه الجداول في [وضعَي التخصيص](customization.md#choosing-a-customization-mode) `personal` و`locked`. أمّا في [وضع `config`](customization.md#config-mode)، فلا يُخزَّن شيء ولا تستعلم الإضافة جداولها أبدًا، لذا يمكنك تخطّي هذه الخطوة.
 
 ## تسجيل الإضافة
 
@@ -48,7 +50,7 @@ public function panel(Panel $panel): Panel
 }
 ```
 
-تضيف الإضافة صفحتين إلى اللوحة، **Keyboard shortcuts** و**Manage shortcuts**، وتضيف خريطة المفاتيح وورقة الاختصارات إلى كل صفحة في اللوحة. إذا كان لتطبيقك عدّة لوحات، فسجّل الإضافة على كل لوحة ينبغي أن تحتوي على اختصارات.
+تضيف الإضافة صفحتين إلى اللوحة، **Keyboard shortcuts** و**Manage shortcuts**، وتضيف خريطة المفاتيح وورقة الاختصارات إلى كل صفحة في اللوحة. وفي [وضع `config`](customization.md#config-mode)، لا تضيف إلا صفحة **Keyboard shortcuts**. إذا كان لتطبيقك عدّة لوحات، فسجّل الإضافة على كل لوحة ينبغي أن تحتوي على اختصارات.
 
 <a id="publishing-the-assets"></a>
 

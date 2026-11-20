@@ -23,7 +23,7 @@ You may also give your own table record actions a key, such as `approve` or `rej
 
 ## Customizing shortcuts
 
-Each admin can remap or disable their own navigation keys and add bindings of their own from the **Manage shortcuts** page. You may instead lock the panel to one shared map. Editing the shared presets that everyone starts from is a separate permission, denied until you grant it. See [Letting admins customize](customization.md).
+Each admin can remap or disable their own navigation keys and add bindings of their own from the **Manage shortcuts** page. You may instead lock the panel to one shared map, or keep every key in your configuration file. Editing the shared presets that everyone starts from is a separate permission, denied until you grant it. See [Letting admins customize](customization.md).
 
 ## Reading key names
 

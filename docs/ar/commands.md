@@ -16,6 +16,8 @@ php artisan shortcut-keys:prune
 
 افتراضيًا، يفحص الأمر كل لوحة تسجّل الإضافة. ويطبع ما وجده قبل أن يحذف أي شيء. وفي بيئة `production`، يطلب تأكيدًا قبل الحذف.
 
+في [وضع `config`](customization.md#config-mode)، لا يُخزَّن شيء، فلا يفحص الأمر أي لوحة. بل يطبع `Customization is 'config', so nothing is stored and there is nothing to prune.` ويخرج بنجاح، فيظلّ التنظيف المجدول يعمل.
+
 ### الخيارات
 
 | الخيار | الأثر |

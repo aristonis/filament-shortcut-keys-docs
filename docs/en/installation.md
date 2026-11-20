@@ -30,7 +30,7 @@ php artisan vendor:publish --tag="filament-shortcut-keys-migrations"
 php artisan migrate
 ```
 
-You need these tables in both [customization modes](customization.md#choosing-a-customization-mode), including `locked`.
+You need these tables in the `personal` and `locked` [customization modes](customization.md#choosing-a-customization-mode). In [`config` mode](customization.md#config-mode), nothing is stored and the plugin never queries its tables, so you may skip this step.
 
 ## Registering the plugin
 
@@ -48,7 +48,7 @@ public function panel(Panel $panel): Panel
 }
 ```
 
-The plugin adds two pages to the panel, **Keyboard shortcuts** and **Manage shortcuts**, and adds the keymap and the cheatsheet to every page of the panel. If your application has several panels, register the plugin on each panel that should have shortcuts.
+The plugin adds two pages to the panel, **Keyboard shortcuts** and **Manage shortcuts**, and adds the keymap and the cheatsheet to every page of the panel. In [`config` mode](customization.md#config-mode), it adds only the **Keyboard shortcuts** page. If your application has several panels, register the plugin on each panel that should have shortcuts.
 
 ## Publishing the assets
 
