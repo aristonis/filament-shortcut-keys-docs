@@ -1,5 +1,7 @@
 # Filament Shortcut Keys
 
+![Filament Shortcut Keys](../assets/cover.jpg)
+
 ## Introduction
 
 Filament Shortcut Keys is a panel plugin that adds keyboard shortcuts to a Filament 5 panel without any per-resource setup. When a page renders, the plugin reads the panel's registered resources and pages, the page's header actions and its tables, gives each one a key, and sends the resulting keymap to the browser. When you add a resource, it gets a shortcut.
