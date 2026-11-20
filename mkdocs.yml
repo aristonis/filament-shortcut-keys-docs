@@ -27,6 +27,8 @@ theme:
     - content.code.copy
     - search.suggest
     - search.highlight
+  logo: assets/aristonis-logo.png
+  favicon: assets/favicon.png
   icon:
     language: material/translate
     repo: fontawesome/brands/github
