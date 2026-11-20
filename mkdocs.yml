@@ -49,10 +49,6 @@ nav:
   - Troubleshooting: troubleshooting.md
   - Limitations: limitations.md
   - Architecture: architecture.md
-  - Internals:
-      - Design notes: internals/architecture.md
-      - Resolution: internals/resolution.md
-      - Domain model: internals/domain-model.md
 
 plugins:
   - search
