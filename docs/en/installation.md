@@ -65,7 +65,7 @@ $this->assertTrue(Route::has('filament.admin.pages.shortcut-reference'));
 
 ## Publishing the assets
 
-The keys are handled by a script that Filament publishes with its other assets. Publish it with:
+The keys are handled by a script that Filament publishes with its other assets. After you register the plugin, publish it with:
 
 ```bash
 php artisan filament:assets
@@ -74,7 +74,9 @@ php artisan filament:assets
 !!! warning
     Without the published script, no key does anything, and no error appears. The keymap is still rendered into the page, so everything looks installed.
 
-An application set up with `php artisan filament:install` already runs `filament:upgrade` from Composer's `post-autoload-dump` hook, which publishes every plugin's assets after each `composer install` and `composer update`. Check that your `composer.json` contains the hook:
+Run this command once even if your application has the Composer hook described below. Filament publishes the script only for a panel that has the plugin registered. When you run `composer require`, the plugin is not on a panel yet, so the hook has nothing of it to publish.
+
+An application set up with `php artisan filament:install` runs `filament:upgrade` from Composer's `post-autoload-dump` hook, which publishes the assets of every registered plugin after each `composer install` and `composer update`. The hook keeps the script current when you update the package. Check that your `composer.json` contains the hook:
 
 ```json
 "scripts": {
@@ -86,7 +88,7 @@ An application set up with `php artisan filament:install` already runs `filament
 }
 ```
 
-If it does not, run `php artisan filament:assets` yourself after installing the package and after every update.
+If it does not, run `php artisan filament:assets` yourself after every update.
 
 ## Publishing the configuration
 

@@ -69,7 +69,7 @@ $this->assertTrue(Route::has('filament.admin.pages.shortcut-reference'));
 
 ## نشر الملفات الثابتة (`assets`)
 
-تتولّى المفاتيحَ سكربتٌ ينشره Filament مع ملفاته الثابتة الأخرى. انشره بالأمر:
+تتولّى المفاتيحَ سكربتٌ ينشره Filament مع ملفاته الثابتة الأخرى. بعد تسجيل الإضافة، انشره بالأمر:
 
 ```bash
 php artisan filament:assets
@@ -78,7 +78,9 @@ php artisan filament:assets
 !!! warning
     من دون السكربت المنشور، لا يفعل أي مفتاح شيئًا، ولا يظهر أي خطأ. فخريطة المفاتيح تُعرَض في الصفحة رغم ذلك، فيبدو كل شيء مثبّتًا.
 
-التطبيق المُعَدّ باستخدام `php artisan filament:install` يشغّل أصلًا `filament:upgrade` من خطّاف `post-autoload-dump` في Composer، وهو ينشر الملفات الثابتة لكل الإضافات بعد كل `composer install` و`composer update`. تحقّق من أنّ ملف `composer.json` لديك يحتوي على هذا الخطّاف:
+شغّل هذا الأمر مرّة واحدة حتى لو كان تطبيقك يحتوي على خطّاف Composer الموصوف أدناه. فـFilament لا ينشر السكربت إلا للوحة سُجّلت عليها الإضافة. وعند تشغيل `composer require` لا تكون الإضافة على أي لوحة بعد، فلا يجد الخطّاف منها شيئًا لينشره.
+
+التطبيق المُعَدّ باستخدام `php artisan filament:install` يشغّل `filament:upgrade` من خطّاف `post-autoload-dump` في Composer، وهو ينشر الملفات الثابتة لكل الإضافات المسجّلة بعد كل `composer install` و`composer update`. ويُبقي الخطّاف السكربت محدَّثًا عند تحديث الحزمة. تحقّق من أنّ ملف `composer.json` لديك يحتوي على هذا الخطّاف:
 
 ```json
 "scripts": {
@@ -90,7 +92,7 @@ php artisan filament:assets
 }
 ```
 
-إن لم يكن يحتوي عليه، فشغّل `php artisan filament:assets` بنفسك بعد تثبيت الحزمة وبعد كل تحديث.
+إن لم يكن يحتوي عليه، فشغّل `php artisan filament:assets` بنفسك بعد كل تحديث.
 
 <a id="publishing-the-configuration"></a>
 
