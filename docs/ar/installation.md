@@ -52,6 +52,19 @@ public function panel(Panel $panel): Panel
 
 تضيف الإضافة صفحتين إلى اللوحة، **Keyboard shortcuts** و**Manage shortcuts**، وتضيف خريطة المفاتيح وورقة الاختصارات إلى كل صفحة في اللوحة. وفي [وضع `config`](customization.md#config-mode)، لا تضيف إلا صفحة **Keyboard shortcuts**. إذا كان لتطبيقك عدّة لوحات، فسجّل الإضافة على كل لوحة ينبغي أن تحتوي على اختصارات.
 
+تُشتقّ معرّفات روابط الصفحتين (`slug`) من أسماء أصنافهما، لا من عنوانَيهما. استخدمها لإنشاء روابط إلى الصفحتين أو لاختبارهما:
+
+| الصفحة | المعرّف (`slug`) | اسم المسار (`route`) |
+| --- | --- | --- |
+| Keyboard shortcuts | `shortcut-reference` | `filament.{panel}.pages.shortcut-reference` |
+| Manage shortcuts | `manage-shortcuts` | `filament.{panel}.pages.manage-shortcuts` |
+
+`{panel}` هو معرّف اللوحة. وفي وضع `config`، لا يوجد المسار `manage-shortcuts`. فمثلًا، للوحة التي معرّفها `admin`:
+
+```php
+$this->assertTrue(Route::has('filament.admin.pages.shortcut-reference'));
+```
+
 <a id="publishing-the-assets"></a>
 
 ## نشر الملفات الثابتة (`assets`)

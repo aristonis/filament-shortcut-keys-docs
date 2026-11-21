@@ -50,6 +50,19 @@ public function panel(Panel $panel): Panel
 
 The plugin adds two pages to the panel, **Keyboard shortcuts** and **Manage shortcuts**, and adds the keymap and the cheatsheet to every page of the panel. In [`config` mode](customization.md#config-mode), it adds only the **Keyboard shortcuts** page. If your application has several panels, register the plugin on each panel that should have shortcuts.
 
+The page slugs come from the class names, not from the labels. Use them to link to the pages or to test them:
+
+| Page | Slug | Route name |
+|---|---|---|
+| Keyboard shortcuts | `shortcut-reference` | `filament.{panel}.pages.shortcut-reference` |
+| Manage shortcuts | `manage-shortcuts` | `filament.{panel}.pages.manage-shortcuts` |
+
+`{panel}` is the panel ID. In `config` mode, the `manage-shortcuts` route does not exist. For a panel with the ID `admin`:
+
+```php
+$this->assertTrue(Route::has('filament.admin.pages.shortcut-reference'));
+```
+
 ## Publishing the assets
 
 The keys are handled by a script that Filament publishes with its other assets. Publish it with:
