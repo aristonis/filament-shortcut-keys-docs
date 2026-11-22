@@ -6,10 +6,10 @@
 
 - PHP 8.2+
 - Laravel v12.0+ أو v13.0+
-- Filament v5.0+
+- Filament v4.0+ أو v5.0+
 - قاعدة بيانات تدعم نوع عمود JSON أصليًا: MySQL 5.7+ أو MariaDB 10.2+ أو PostgreSQL أو SQLite
 
-لا يُدعَم Filament 4. تعمل مجموعة الاختبارات على SQLite وMySQL 8 وPostgreSQL 16.
+تعمل مجموعة الاختبارات على SQLite وMySQL 8 وPostgreSQL 16.
 
 ## تثبيت الحزمة
 

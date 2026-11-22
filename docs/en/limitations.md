@@ -6,7 +6,6 @@ This page lists the known limitations of the current release. Most of them are d
 
 ## Scope
 
-- **Filament 5 only.** Filament 4 is not supported.
 - **English only.** Every string can be translated, but only English translations ship. See [Localization](localization.md).
 - **Right-to-left support is limited to the paging keys.** The paging keys are mirrored in a right-to-left panel, but the right-to-left experience as a whole has not been verified in a browser.
 

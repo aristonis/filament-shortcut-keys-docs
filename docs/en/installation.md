@@ -6,10 +6,10 @@ Filament Shortcut Keys requires the following to run:
 
 - PHP 8.2+
 - Laravel v12.0+ or v13.0+
-- Filament v5.0+
+- Filament v4.0+ or v5.0+
 - A database with a native JSON column type: MySQL 5.7+, MariaDB 10.2+, PostgreSQL or SQLite
 
-Filament 4 is not supported. The test suite runs against SQLite, MySQL 8 and PostgreSQL 16.
+The test suite runs against SQLite, MySQL 8 and PostgreSQL 16.
 
 ## Installing the package
 
