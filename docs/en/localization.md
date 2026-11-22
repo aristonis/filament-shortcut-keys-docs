@@ -35,7 +35,7 @@ Navigation labels come from your resources and pages, and header action labels f
 
 Navigation letters come from the navigation label, which is translated. Only the letters `a` to `z` count, so:
 
-- a label written in another script, such as Arabic, has no usable letters and takes the first free letter of the alphabet, in navigation sort order,
+- a label written in another script, such as Arabic, has no usable letters and takes the first free letter of the alphabet, in sidebar order,
 - the same page can get a different letter in each language your panel runs in.
 
 Each locale is cached separately, so these letters are correct in every language. If your admins switch between languages and need the same key everywhere, pin those letters in the [overlay](configuration.md#pinning-and-disabling-shortcuts).

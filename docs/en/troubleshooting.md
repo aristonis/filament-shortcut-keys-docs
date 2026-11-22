@@ -64,7 +64,7 @@ Each group lists its set and its bindings, each with its target and its key. If 
 ## A shortcut has an unexpected letter
 
 - **A pinned or stored letter was ignored** because it is not `a` to `z`, or because it is `G`, `J` or `K` among single keys.
-- **An automatic letter moved**, because a pinned letter took its key, or because a page added earlier in the navigation sort took it first. Pin the letters people rely on.
+- **An automatic letter moved**, because a pinned letter took its key, or because a page added earlier in the sidebar took it first. Pin the letters people rely on.
 - **A row action's letter changed** after the `rowActions()` list was reordered. The order decides who chooses first.
 - **The letter differs between languages**, because navigation letters come from the translated label. See [Letters in other languages](localization.md#letters-in-other-languages).
 - **An admin's change seems ignored.** An overlay disable overrides it. A letter the overlay only pins is replaced by the admin's letter.

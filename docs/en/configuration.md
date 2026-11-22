@@ -33,6 +33,10 @@ return [
 
     'overlay' => [],
 
+    'navigation' => [
+        'include_hidden' => false,
+    ],
+
     'cache' => [
         'ttl' => 86400,
     ],
@@ -144,6 +148,34 @@ The overlay is meant for keys you need fixed in code, not for preferences. An ov
 
 !!! tip
     Pinned letters can collide with each other. After adding pins, open the cheatsheet and check that each pinned shortcut still has its key.
+
+## Including pages hidden from the sidebar
+
+A resource or page hidden from the sidebar with `$shouldRegisterNavigation = false` gets no navigation shortcut. To give every hidden resource and page one, set `navigation.include_hidden`:
+
+```php
+'navigation' => [
+    'include_hidden' => true,
+],
+```
+
+Hidden items are lettered after every sidebar item, so they never take a letter a sidebar item would get. A hidden page whose route needs a parameter is skipped. Disable any other hidden page that shows nothing without a record or a query parameter, because its key would open the bare URL:
+
+```php
+'overlay' => [
+    'navigation:App\Filament\Pages\OrderDetails' => ['disabled' => true],
+],
+```
+
+To give a single hidden page a key instead, pin its letter in the overlay. A pinned hidden page gets its key even when `include_hidden` is `false`:
+
+```php
+'overlay' => [
+    'navigation:App\Filament\Pages\Reports' => ['letter' => 'r'],
+],
+```
+
+A value other than `true` or `false` throws, so an environment string such as `"false"` cannot turn the option on by mistake.
 
 ## Caching
 

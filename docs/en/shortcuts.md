@@ -24,10 +24,11 @@ While `G` waits for its letter, each sidebar link with a shortcut shows its lett
 
 ### Which pages get a navigation shortcut
 
-Every resource and page registered on the panel gets a navigation shortcut, including:
+Every resource and page in the sidebar gets a navigation shortcut, including the plugin's own **Keyboard shortcuts** and **Manage shortcuts** pages.
 
-- pages hidden from the sidebar with `$shouldRegisterNavigation = false`,
-- the plugin's own **Keyboard shortcuts** and **Manage shortcuts** pages.
+A resource or page hidden from the sidebar with `$shouldRegisterNavigation = false` gets none. Such pages are often reached only from a link that carries a record or a parameter, so a key to their bare URL would open an error page. To give them keys, [include hidden pages](configuration.md#including-pages-hidden-from-the-sidebar).
+
+Pages and resources inside a cluster get a key, lettered after every sidebar item. A nested resource, a resource without an `index` page and a page whose route needs a parameter get none, because they have no URL a key could open.
 
 Items you add with `$panel->navigationItems()` do not get one. To remove a page's shortcut, [disable it in the overlay](configuration.md#pinning-and-disabling-shortcuts):
 
@@ -101,11 +102,11 @@ A pool holds at most 26 letters, and the default single-key pool holds 23. A sho
 
 Letters are handed out in this order:
 
-- **Navigation** follows each resource's and page's navigation sort.
+- **Navigation** follows the sidebar: items outside any group first, then each navigation group in the order the panel registers it, sorted by navigation sort inside the group. Cluster pages come after every sidebar item, and [hidden pages you include](configuration.md#including-pages-hidden-from-the-sidebar) after those.
 - **Row actions** are lettered first, across the whole panel, in the order you register them. No header action is ever given a row action's letter automatically, on any page.
 - **Header actions** follow the order in which the page declares them.
 
-Because navigation follows the navigation sort, adding a resource can move the letter of a later one that lost a clash.
+Because navigation follows the sidebar, adding a resource can move the letter of a later one that lost a clash.
 
 !!! tip
     Pin the letters people rely on with the [overlay](configuration.md#pinning-and-disabling-shortcuts). A pinned letter does not move when you add or remove other shortcuts.

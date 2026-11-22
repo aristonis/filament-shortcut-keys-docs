@@ -6,7 +6,7 @@ A shortcut only ever does what the admin could have done with the mouse. It clic
 
 ## The keymap is the same for every admin
 
-The navigation shortcuts are built from every resource and page registered on the panel, without checking whether the current admin may open them. Every admin receives the same navigation shortcuts. When a key is pressed, your own authorization decides what happens:
+The navigation shortcuts are built from the resources and pages in the panel's sidebar, without checking whether the current admin may open them. Admins who see the same sidebar receive the same navigation shortcuts. If your `shouldRegisterNavigation()` depends on the signed-in admin, each admin gets keys for the items in their own sidebar. When a key is pressed, your own authorization decides what happens:
 
 - Filament does not render a header action or row action the admin is not authorized for, so its key has nothing to click.
 - A page the admin may not open is stopped by your middleware or Filament's access check, so its key leads to a 403 response.

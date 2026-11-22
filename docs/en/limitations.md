@@ -13,7 +13,7 @@ This page lists the known limitations of the current release. Most of them are d
 ## What gets a shortcut
 
 - **A page cannot declare shortcuts of its own.** Shortcuts come from navigation, header actions and tables, plus the row actions and custom bindings described in this documentation.
-- **Navigation follows registration, not the sidebar.** Every registered resource and page gets a key, including pages hidden from the sidebar. To remove one, [disable it in the overlay](configuration.md#pinning-and-disabling-shortcuts).
+- **Navigation follows the default sidebar.** Every resource and page in the sidebar gets a key; pages hidden from it get none unless you [include them](configuration.md#including-pages-hidden-from-the-sidebar). A custom navigation built with `$panel->navigation()` is lettered by navigation group and sort, which may not match what it shows. To remove a key, [disable it in the overlay](configuration.md#pinning-and-disabling-shortcuts).
 - **Items added with `$panel->navigationItems()` get no key.** An admin can add a [custom binding](custom-bindings.md) to one instead.
 - **Header actions inside an action group get no key.**
 - **Row actions inside an action group** are bound and listed, but whether the key reaches the control while the group's dropdown is closed has not been verified.
@@ -23,7 +23,8 @@ This page lists the known limitations of the current release. Most of them are d
 
 ## Letters
 
-- **Automatic letters follow the navigation sort.** Adding a page can move the letter of a later one. Pin the letters people rely on.
+- **Automatic letters follow the sidebar order.** Adding a page can move the letter of a later one. Pin the letters people rely on.
+- **Letters can differ between admins** when your `shouldRegisterNavigation()` depends on the signed-in admin, because each admin is lettered by their own sidebar. Pin the letters admins share.
 - **Row action letters follow the order of the `rowActions()` list.** Reordering the list changes them.
 - **Only the letters `a` to `z` are taken from names.** Labels in other scripts take letters in alphabet order, and navigation letters can differ between languages.
 
